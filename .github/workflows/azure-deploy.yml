@@ -1,16 +1,32 @@
-name: Deploy TicketFlow to Azure
+name: Azure Deploy TicketFlow
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.x
-      - run: npm install
+
+      - name: Install dependencies
+        run: npm install
         working-directory: server
+
+      - name: Zip app
+        run: zip -r app.zip .
+        working-directory: server
+
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ticketflow
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: server/app.zip
